@@ -64,6 +64,8 @@ extern NSString *const kCRToastSubtitleTextShadowColorKey;
 extern NSString *const kCRToastSubtitleTextShadowOffsetKey;
 extern NSString *const kCRToastSubtitleTextMaxNumberOfLinesKey;
 
+extern NSString *const kCRToastStatusBarStyle;
+
 extern NSString *const kCRToastBackgroundColorKey;
 extern NSString *const kCRToastImageKey;
 

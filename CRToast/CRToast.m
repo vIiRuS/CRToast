@@ -58,6 +58,8 @@
 @property (nonatomic, readonly) CGSize subtitleTextShadowOffset;
 @property (nonatomic, readonly) NSInteger subtitleTextMaxNumberOfLines;
 
+@property (nonatomic, readonly) UIStatusBarStyle statusBarStyle;
+
 @property (nonatomic, readonly) UIColor *backgroundColor;
 @property (nonatomic, readonly) UIImage *image;
 
@@ -70,6 +72,10 @@
 @property (nonatomic, readonly) CGPoint outCollisionPoint2;
 
 
+@end
+
+@interface CRToastViewController : UIViewController
+-(void)statusBarStyle:(UIStatusBarStyle)newStatusBarStyle;
 @end
 
 @interface CRToastView : UIView
@@ -112,6 +118,8 @@ NSString *const kCRToastSubtitleTextShadowColorKey          = @"kCRToastSubtitle
 NSString *const kCRToastSubtitleTextShadowOffsetKey         = @"kCRToastSubtitleTextShadowOffsetKey";
 NSString *const kCRToastSubtitleTextMaxNumberOfLinesKey     = @"kCRToastSubtitleTextMaxNumberOfLinesKey";
 
+NSString *const kCRToastStatusBarStyle                      = @"kCRToastStatusBarStyle";
+
 NSString *const kCRToastBackgroundColorKey                  = @"kCRToastBackgroundColorKey";
 NSString *const kCRToastImageKey                            = @"kCRToastImageKey";
 
@@ -149,6 +157,8 @@ static NSTextAlignment          	kCRSubtitleTextAlignmentDefault                
 static UIColor  *               	kCRSubtitleTextShadowColorDefault               = nil;
 static CGSize                   	kCRSubtitleTextShadowOffsetDefault;
 static NSInteger                    kCRSubtitleTextMaxNumberOfLinesDefault          = 0;
+
+static UIStatusBarStyle             kCRStatusBarStyleDefault                = UIStatusBarStyleDefault;
 
 static UIColor  *                   kCRBackgroundColorDefault               = nil;
 static UIImage  *                   kCRImageDefault                         = nil;
@@ -270,6 +280,8 @@ static CGRect CRStatusBarViewFrame(CRToastType type, CRToastAnimationDirection d
     if (defaultOptions[kCRToastSubtitleTextShadowColorKey])                 kCRSubtitleTextShadowColorDefault               = defaultOptions[kCRToastSubtitleTextShadowColorKey];
     if (defaultOptions[kCRToastSubtitleTextShadowOffsetKey])                kCRSubtitleTextShadowOffsetDefault              = [defaultOptions[kCRToastSubtitleTextShadowOffsetKey] CGSizeValue];
     if (defaultOptions[kCRToastSubtitleTextMaxNumberOfLinesKey])            kCRSubtitleTextMaxNumberOfLinesDefault          = [defaultOptions[kCRToastSubtitleTextMaxNumberOfLinesKey] integerValue];
+    
+    if (defaultOptions[kCRToastStatusBarStyle])                 kCRStatusBarStyleDefault               = [defaultOptions[kCRToastStatusBarStyle] integerValue];
     
     if (defaultOptions[kCRToastBackgroundColorKey])                 kCRBackgroundColorDefault               = defaultOptions[kCRToastBackgroundColorKey];
     if (defaultOptions[kCRToastImageKey])                           kCRImageDefault                         = defaultOptions[kCRToastImageKey];
@@ -459,6 +471,10 @@ static CGRect CRStatusBarViewFrame(CRToastType type, CRToastAnimationDirection d
     kCRSubtitleTextMaxNumberOfLinesDefault;
 }
 
+- (UIStatusBarStyle)statusBarStyle {
+    return _options[kCRToastStatusBarStyle] ? [_options[kCRToastStatusBarStyle] integerValue] : kCRStatusBarStyleDefault;
+}
+
 BOOL CRToastAnimationDirectionIsVertical(CRToastAnimationDirection animationDirection) {
     return (animationDirection == CRToastAnimationDirectionTop || animationDirection == CRToastAnimationDirectionBottom);
 }
@@ -587,6 +603,22 @@ static CGFloat kCRCollisionTweak = 0.5;
 
 @end
 
+
+#pragma mark - CRToastViewController
+
+@implementation CRToastViewController
+UIStatusBarStyle statusBarStyle;
+
+- (UIStatusBarStyle)preferredStatusBarStyle
+{
+    return statusBarStyle;
+}
+
+-(void)statusBarStyle:(UIStatusBarStyle)newStatusBarStyle {
+    statusBarStyle = newStatusBarStyle;
+    [self setNeedsStatusBarAppearanceUpdate];
+}
+@end
 #pragma mark - CRToastView
 
 @interface CRToastView ()
@@ -734,7 +766,7 @@ static NSString *const kCRToastManagerCollisionBoundryIdentifier = @"kCRToastMan
         notificationWindow.userInteractionEnabled = NO;
         notificationWindow.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
         notificationWindow.windowLevel = UIWindowLevelStatusBar;
-        notificationWindow.rootViewController = [UIViewController new];
+        notificationWindow.rootViewController = [CRToastViewController new];
         notificationWindow.rootViewController.view.clipsToBounds = YES;
         self.notificationWindow = notificationWindow;
         
@@ -769,6 +801,9 @@ static NSString *const kCRToastManagerCollisionBoundryIdentifier = @"kCRToastMan
     } else {
         _notificationWindow.rootViewController.view.frame = CGRectMake(0, 0, notificationSize.width, notificationSize.height);
     }
+    
+    CRToastViewController *rootViewController = (CRToastViewController*)_notificationWindow.rootViewController;
+    [rootViewController statusBarStyle:notification.statusBarStyle];
     
     _notificationWindow.windowLevel = notification.underStatusBar ? UIWindowLevelNormal : UIWindowLevelStatusBar;
     
